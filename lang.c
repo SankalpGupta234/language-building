@@ -25,8 +25,7 @@ int main(int argc, char *argv[])
         vars[j].name = '\0';
     }
 
-    printf("Trying to open: '%s'\n", argv[1]);
-    FILE *file = fopen("test.txt", "r");
+    FILE *file = fopen(argv[1], "r");
     int character;
 
     character = fgetc(file);
