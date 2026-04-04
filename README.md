@@ -40,5 +40,5 @@ The parser is only able to handle variable names having a single lowercase lette
 
 The program can have a maximum of 10 variables.
 
-You can perform only binary arithmetic operations +, -, *, and /.
+You can perform only binary arithmetic operations +, -, *, /, and %.
 

@@ -162,6 +162,10 @@ int operate(int eval, char operation, int value)
             return eval / value;
             break;
         }
+        case '%':
+        {
+            return eval % value;
+        }
         default:
         {
             return value;
