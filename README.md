@@ -1,5 +1,4 @@
-# Usage
-==========
+## Usage
 
 Try the following:
 
