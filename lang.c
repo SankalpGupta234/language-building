@@ -20,11 +20,11 @@ int operate(int eval, char operation, int value);
 
 int main(int argc, char *argv[])
 {
-    /*if (argc != 2)
+    if (argc != 2)
     {
         printf("Usage: ./lang <filename>.txt\n");
         return 0;
-    }*/
+    }
     
     var vars[MAX_VAR_SIZE];
 
@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
         vars[j].name = '\0';
     }
 
-    FILE *file = fopen("test.txt", "r");
+    FILE *file = fopen(argv[1], "r");
     int* ch = (int *) malloc(sizeof(int));
 
     //*ch = fgetc(file);
