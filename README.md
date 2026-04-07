@@ -1,4 +1,4 @@
-**Under Construction**
+**Finally Working!!!**
 
 ## Usage
 
@@ -13,26 +13,16 @@ You can do simple variable assignments and arithmetic operations in file.txt lik
 ```
 x = 3
 y = x + 2
-z = y - x
+z = y - x + 4
 ```
 
-Ideally, the program should return you the final value of each variable:
+The program should return you the final value of each variable:
 
 ```
 x = 3
 y = 5
-z = 2
+z = 6
 ```
-
-But since my code has bugs it will return something like
-
-```
-x = 3
-y = 0
-z = 0
-```
-
-so... yeah.
 
 ## Language Constraints
 
@@ -41,4 +31,10 @@ The parser is only able to handle variable names having a single lowercase lette
 The program can have a maximum of 10 variables.
 
 You can perform only binary arithmetic operations +, -, *, /, and %.
+
+# Operator Precedence
+
+There is no pre-defined precedence of arithmetic operations. The parser will evaluate expressions from left to right.
+
+Since there are no floating points, only integer division will be performed.
 
