@@ -1,4 +1,5 @@
-**Finally Working!!!**
+Finally Working!!!
+=========
 
 ## Usage
 
@@ -32,7 +33,7 @@ The program can have a maximum of 10 variables.
 
 You can perform only binary arithmetic operations +, -, *, /, and %.
 
-# Operator Precedence
+## Operator Precedence
 
 There is no pre-defined precedence of arithmetic operations. The parser will evaluate expressions from left to right.
 
