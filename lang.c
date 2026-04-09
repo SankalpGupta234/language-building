@@ -55,6 +55,7 @@ int main(int argc, char *argv[])
     print_vars(vars);
 
     fclose(file);
+    free(ch);
 
     return 0;
 }
