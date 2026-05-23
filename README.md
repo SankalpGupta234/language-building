@@ -1,4 +1,4 @@
-Finally Working!!!
+Version 2.0
 =========
 
 ## Usage
@@ -9,29 +9,40 @@ Try the following:
 gcc -o lang lang.c
 ./lang file.txt
 ```
-You can do simple variable assignments and arithmetic operations in file.txt like this:
+You can do simple variable assignments and arithmetic operations in your .txt file like this:
 
 ```
-x = 3
-y = x + 2
-z = y - x + 4
+apple = 3
+banana = apple + 2
+player2 = banana - apple + 4
 ```
 
-The program should return you the final value of each variable:
+Added print statements in v2.0, 
 
 ```
-x = 3
-y = 5
-z = 6
+print player2
+print apple
+
+```
+
+This will print the following to the console:
+
+```
+6
+3
 ```
 
 ## Language Constraints
 
-The parser is only able to handle variable names having a single lowercase letter.
+The following limits are set in the code, they can be changed by changing the appropriate parameters declared at the start.
 
-The program can have a maximum of 10 variables.
+The variable names can be strings of maximum length 10 characters containing any alphanumeric or special characters.
 
-You can perform only binary arithmetic operations +, -, *, /, and %.
+The program can have a maximum of 20 variables.
+
+You can perform only arithmetic operations +, -, *, /, and %.
+
+NOTE: The program requires an empty newline to be added at the end of the text file. You might get sengmentation faults without it.
 
 ## Operator Precedence
 

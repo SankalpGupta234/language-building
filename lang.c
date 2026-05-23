@@ -1,22 +1,54 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
 
 // The maximum number of variables available
-#define MAX_VAR_SIZE 10
+#define MAX_VAR_SIZE 20
+#define MAX_TOKENS 100
+#define MAX_TOKEN_LEN 10
+#define BREAK -1
+#define INTEGER 0
+#define STRING 1
+#define OPERATOR 2
+#define ASSIGN 3
+#define END 4
+#define PRINT 5
+#define ADD 1
+#define SUBTRACT 2
+#define MULTIPLY 3
+#define DIVIDE 4
+#define MODULO 5
 
-typedef struct variable {
-    int value;              // All variables are int type with single letter names
-    char name;
+
+typedef struct {
+    char name[MAX_TOKEN_LEN];
+    int value;
 } var;
 
-int LHS(FILE *file, int *ch, var *vars);
-void crossEqualSign(int *ch, FILE *file);
-int RHS(FILE *file, int *ch, var *vars);
-int getNum(int *ch, FILE *file);
-int tokenType(char c, var *vars);
-void print_vars(var *vars);
-int isWhitespace(char c);
-int operate(int eval, char operation, int value);
+typedef struct {
+    char string[MAX_TOKEN_LEN];
+    int type;           // 0 -> int, 1 -> identifier, 2 -> operator, 3 -> assignment, -1 -> expression break, 4 -> end of tokens, 5 -> print
+} token;
+
+var vars[MAX_VAR_SIZE];
+token tokens[MAX_TOKENS];
+int token_no = 0;
+int totalVars = -1;
+
+
+// function prototypes here
+char *load_file(char* filename);
+void tokenize(char* buff);
+char* get_token(char *ch, int type);
+void execute(token *tokens);
+token* statement(token* statement);
+int LHS(token** curr);
+int RHS(token** curr);
+int getNum(char* ch);
+int operate(int eval, int value, int operation);
+int searchVar(char string[]);
+
 
 int main(int argc, char *argv[])
 {
@@ -25,224 +57,245 @@ int main(int argc, char *argv[])
         printf("Usage: ./lang <filename>.txt\n");
         return 0;
     }
-    
-    var vars[MAX_VAR_SIZE];
 
-    for (int j = 0; j < MAX_VAR_SIZE; j++)
-    {
-        vars[j].value = 0;
-        vars[j].name = '\0';
-    }
+    char *buff = load_file(argv[1]);
 
-    FILE *file = fopen(argv[1], "r");
-    int* ch = (int *) malloc(sizeof(int));
+    tokenize(buff);
+    free(buff);
 
-    //*ch = fgetc(file);
-    while ((*ch = fgetc(file)) != EOF)
-    {
-        // Break the file into lines
-        while (*ch != '\n' && *ch != EOF)
-        {
-            int var_i = LHS(file, ch, vars);
-            crossEqualSign(ch, file);
-            int eval = RHS(file, ch, vars);
-
-            vars[var_i].value = eval;
-        }
-    }
-
-    // Print all the exisiting variables
-    print_vars(vars);
-
-    fclose(file);
-    free(ch);
+    execute(tokens);
 
     return 0;
 }
 
-
-
-int LHS(FILE *file, int *ch, var *vars)
+char *load_file(char* filename)
 {
-    while (isWhitespace(*ch))
-    {
-        *ch = fgetc(file);
-    }
+    FILE *file = fopen(filename, "r");
+    fseek(file, 0, SEEK_END);
+    long size = ftell(file);
+    rewind(file);
 
+    char *buff = (char *) malloc((size + 1) * sizeof(char));
+    fread(buff, 1, size, file);
+    buff[size] = '\0';
 
-    if (*ch >= 'a' && *ch <= 'z')
+    fclose(file);
+    return buff;
+}
+
+void tokenize(char* buff)
+{
+    char *ch = buff;
+
+    while (*ch)
     {
-        int i = 0;
-        // Checks if this variable already exists
-        while (vars[i].name != '\0')
+        if (*ch == '\n')
         {
-            if (vars[i].name == *ch)
-            {
-                return i;
-            }
-
-            i++;
+            tokens[token_no].type = BREAK;
+            token_no++;
+            ch++;
+            continue;
         }
 
-        // Creates new variable
-        vars[i].name = *ch;
-        return i;
+        if (*ch == '=')
+        {
+            tokens[token_no].type = ASSIGN;
+            token_no++;
+            ch++;
+            continue;
+        }
+        
+        if (isspace(*ch))
+        {
+            ch++;
+            continue;
+        }
+
+        if ((*ch >= 'A' && *ch <= 'Z') || (*ch >= 'a' && *ch <= 'z'))
+        {
+            ch = get_token(ch, STRING);
+            continue;
+        }
+
+        if (*ch >= '0' && *ch <= '9')
+        {
+            ch = get_token(ch, INTEGER);
+            continue;
+        }
+
+        if (*ch == '+' || *ch == '-' || *ch == '*' || *ch == '/' || *ch == '%')
+        {
+            ch = get_token(ch, OPERATOR);
+            continue;
+        }
+
+        printf("ERROR: Unknown character.\n");
+        break;
+    }
+
+    tokens[token_no].type = END;
+}
+
+char* get_token(char *ch, int type)
+{
+    char tmp[MAX_TOKEN_LEN];
+    int i = 0;
+
+    while (!isspace((int) *ch) && *ch)
+    {
+        tmp[i++] = *(ch++);
+    }
+    tmp[i] = '\0';
+
+    strcpy(tokens[token_no].string, tmp);
+    tokens[token_no].type = type;
+    token_no++;
+
+    return ch;
+}
+
+void execute(token *tokens)
+{
+    token* curr = tokens;
+
+    for (int i = 0; i < MAX_TOKENS; i++)
+    {
+        char *print = "print\0";
+        if (strcmp(tokens[i].string, print) == 0)
+        {
+            tokens[i].type = PRINT;
+        }
+    }
+
+    for (int i = 0; i < MAX_VAR_SIZE; i++)
+    {
+        vars[i].name[0] = '\0';
+    }
+    
+    while (curr->type != END)
+    {
+        curr = statement(curr);
+    }
+}
+
+token* statement(token* statement)
+{
+    token* curr = statement;
+
+    if (curr->type == PRINT)
+    {
+        curr++;
+        int eVal = RHS(&curr);
+        printf("%d\n", eVal);
+        return curr;
+    }
+
+    int currVar = LHS(&curr);
+
+    if (curr->type != ASSIGN)
+    {
+        printf("Syntax Error: Expected '=' after identifier.\n");
+    }
+
+    curr++;
+    int expressionVal = RHS(&curr);
+    vars[currVar].value = expressionVal;
+
+    return curr;
+}
+
+int LHS(token** curr)
+{
+    int currVar;
+
+    if (searchVar((*curr)->string) != -1)
+    {
+        currVar = searchVar((*curr)->string);
     }
     else
     {
-        return -1;
-    }
-}
-
-void crossEqualSign(int *ch, FILE *file)
-{
-    while (*ch != '=')
-    {
-        *ch = fgetc(file);
+        totalVars++;
+        currVar = totalVars;
+        strcpy(vars[currVar].name, (*curr)->string);
     }
 
-    *ch = fgetc(file);
-
-    return;
+    (*curr)++;
+    return currVar;
 }
 
-int RHS(FILE *file, int *ch, var *vars)
+int RHS(token** curr)
 {
-    int eval = 0;
-    char operation = '+';   // initialized + because eval is 0
+    int expressionVal = 0;
+    int operator = ADD;
 
-    while (*ch != '\n')
+    while ((*curr)->type != BREAK)
     {
-        while (isWhitespace(*ch))
+        if ((*curr)->type == INTEGER)
         {
-            *ch = fgetc(file);
+            expressionVal = operate(expressionVal, getNum((*curr)->string), operator);
         }
-        
-        while (!isWhitespace(*ch) && *ch != '\n')
+        else if ((*curr)->type == STRING)
         {
-            if (*ch == EOF)
-            {
-                return eval;
-            }
+            expressionVal = operate(expressionVal, vars[searchVar((*curr)->string)].value, operator);
+        }
 
-            int tType = tokenType(*ch, vars);
+        (*curr)++;
 
-            if (tType >= 0 && tType < MAX_VAR_SIZE)
-            {
-                eval = operate(eval, operation, vars[tType].value);
-                *ch = fgetc(file);
-            }
-            else if (tType == MAX_VAR_SIZE)
-            {
-                operation = *ch;
-                *ch = fgetc(file);
-            }
-            else if (tType > MAX_VAR_SIZE)
-            {
-                eval = operate(eval, operation, getNum(ch, file));
-            }
-            else
-            {
-                return -1;
-            }
+        if ((*curr)->type == OPERATOR)
+        {
+            char op = (*curr)->string[0];
+            if (op == '+') operator = ADD;
+            if (op == '-') operator = SUBTRACT;
+            if (op == '*') operator = MULTIPLY;
+            if (op == '/') operator = DIVIDE;
+            if (op == '%') operator = MODULO;
+
+            (*curr)++;
         }
     }
 
-    return eval;
+    (*curr)++;
+    return expressionVal;
 }
 
-int getNum(int *ch, FILE *file)
+int getNum(char* ch)
 {
     int number = 0;
     while (*ch >= '0' && *ch <= '9')
     {
         number *= 10;
         number += *ch - '0';
-        *ch = fgetc(file);
+        ch++;
     }
 
     return number;
 }
 
-int tokenType(char c, var *vars)
-{
-
-    /*
-    Returns: 
-        variable index for existing variable (1 - max)
-        max for operations
-        max + 1 for literal integers
-        -1 elsewhere
-    */
-
-    for (int i = 0; i < MAX_VAR_SIZE; i++)
-    {
-        if (vars[i].name == c)
-        {
-            return i;
-        }
-    }
-    
-    if (c == '+' || c == '-' || c == '*' || c == '/' || c == '%')
-    {
-        return MAX_VAR_SIZE;
-    }
-
-    if (c >= '0' && c <= '9')
-    {
-        return MAX_VAR_SIZE + 1;
-    }
-
-    return -1;
-}
-
-void print_vars(var *vars)
-{
-    for (int i = 0; i < 10; i++)
-    {
-        if (vars[i].name != '\0')
-        {
-            printf("%c = %d\n", vars[i].name, vars[i].value);
-        }
-    }
-}
-
-
-int isWhitespace(char c)
-{
-    if (c == ' ' || c == '\t')
-    {
-        return 1;
-    }
-
-    return 0;
-}
-
-int operate(int eval, char operation, int value)
+int operate(int eval, int value, int operation)
 {
     switch (operation)
     {
-        case '+':
+        case ADD:
         {
             return eval + value;
             break;
         }
-        case '-':
+        case SUBTRACT:
         {
             return eval - value;
             break;
         }
-        case '*':
+        case MULTIPLY:
         {
             return eval * value;
             break;
         }
-        case '/':
+        case DIVIDE:
         {
             return eval / value;
             break;
         }
-        case '%':
+        case MODULO:
         {
             return eval % value;
         }
@@ -251,4 +304,14 @@ int operate(int eval, char operation, int value)
             return value;
         }
     }
+}
+
+int searchVar(char string[])
+{
+    for (int i = 0; i < MAX_VAR_SIZE; i++)
+    {
+        if (strcmp(string, vars[i].name) == 0) return i;
+    }
+
+    return -1;
 }
