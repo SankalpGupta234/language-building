@@ -6,7 +6,7 @@
 // The maximum number of variables available
 #define MAX_VAR_SIZE 20
 #define MAX_TOKENS 100
-#define MAX_TOKEN_LEN 10
+#define MAX_TOKEN_LEN 30
 #define BREAK -1
 #define INTEGER 0
 #define STRING 1

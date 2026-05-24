@@ -36,7 +36,7 @@ This will print the following to the console:
 
 The following limits are set in the code, they can be changed by changing the appropriate parameters declared at the start.
 
-The variable names can be strings of maximum length 10 characters containing any alphanumeric or special characters.
+The variable names can be strings of maximum length 30 characters containing any alphanumeric or special characters.
 
 The program can have a maximum of 20 variables.
 
